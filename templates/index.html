@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedCode Finder</title>
+  <meta name="description" content="Search local diagnosis, procedure, and NDC code datasets.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="MedCode Finder home">
+      <span class="brand-mark">M+</span>
+      <span>MedCode Finder</span>
+    </a>
+    <span class="local-badge"><i></i> Local data only</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">MEDICAL CODE SEARCH</p>
+      <h1>One search.<br><em>Three code systems.</em></h1>
+      <p class="intro">Find diagnosis, procedure, and drug records from your own CSV datasets. Nothing is sent to an external service.</p>
+    </section>
+
+    <section class="search-panel" aria-labelledby="search-title">
+      <div class="panel-heading">
+        <div>
+          <p class="step">01 / SEARCH</p>
+          <h2 id="search-title">What are you looking for?</h2>
+        </div>
+        <button id="setupToggle" class="text-button" type="button">Manage datasets</button>
+      </div>
+
+      <form id="searchForm">
+        <label class="sr-only" for="keyword">Disease, procedure, drug name, or code</label>
+        <div class="search-row">
+          <input id="keyword" type="search" placeholder="e.g. Squamous Cell Carcinoma" autocomplete="off" required>
+          <button class="primary-button" type="submit"><span>Search records</span><b>→</b></button>
+        </div>
+
+        <fieldset>
+          <legend>Search in</legend>
+          <div class="choices">
+            <label><input type="checkbox" name="dataset" value="diagnosis" checked><span><b>Diagnosis</b><small>ICD-9 & ICD-10</small></span></label>
+            <label><input type="checkbox" name="dataset" value="procedure" checked><span><b>Procedures</b><small>HCPCS codes</small></span></label>
+            <label><input type="checkbox" name="dataset" value="ndc" checked><span><b>Drug / NDC</b><small>Names & classes</small></span></label>
+          </div>
+        </fieldset>
+      </form>
+      <p id="message" class="message" role="status"></p>
+    </section>
+
+    <section id="setupPanel" class="setup-panel hidden" aria-labelledby="setup-title">
+      <div class="panel-heading">
+        <div><p class="step">DATA SETUP</p><h2 id="setup-title">Load your CSV files</h2></div>
+        <button id="closeSetup" class="icon-button" aria-label="Close dataset manager">×</button>
+      </div>
+      <p class="muted">Upload each file once. It will be stored locally in this project and loaded by Python.</p>
+      <div id="datasetCards" class="dataset-cards"></div>
+    </section>
+
+    <section id="resultsSection" class="results hidden" aria-labelledby="results-title">
+      <div class="results-heading">
+        <div><p class="step">02 / RESULTS</p><h2 id="results-title">Search results</h2></div>
+        <p id="resultKeyword" class="result-keyword"></p>
+      </div>
+      <div id="summary" class="summary-grid"></div>
+      <div id="resultTables"></div>
+    </section>
+  </main>
+
+  <footer><span>For code lookup only — not medical advice.</span><span>Runs entirely on your machine</span></footer>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
