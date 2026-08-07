@@ -1,5 +1,6 @@
 from pathlib import Path
 from threading import Lock
+import json
 
 import pandas as pd
 from flask import Flask, jsonify, render_template, request
@@ -9,6 +10,7 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
+ABBREVIATIONS_FILE = DATA_DIR / "medical_abbreviations.json"
 
 FILES = {
     "diagnosis": "diagnosis_codes.csv",
@@ -22,6 +24,19 @@ app.config["MAX_CONTENT_LENGTH"] = 250 * 1024 * 1024
 frames = {key: None for key in FILES}
 load_errors = {}
 data_lock = Lock()
+
+
+def load_abbreviations():
+    """Load the local, deterministic abbreviation catalog."""
+    try:
+        with ABBREVIATIONS_FILE.open(encoding="utf-8") as source:
+            catalog = json.load(source)
+        return {
+            str(key).strip().upper(): [str(term).strip() for term in terms if str(term).strip()]
+            for key, terms in catalog.items() if isinstance(terms, list)
+        }
+    except (OSError, ValueError, TypeError):
+        return {}
 
 
 def clean_records(df):
@@ -90,6 +105,13 @@ def home():
 @app.get("/status")
 def status():
     return jsonify(dataset_status())
+
+
+@app.get("/abbreviations/<term>")
+def abbreviation_options(term):
+    abbreviation = term.strip().upper()
+    options = load_abbreviations().get(abbreviation, [])
+    return jsonify({"abbreviation": abbreviation, "matched": bool(options), "options": options})
 
 
 @app.post("/upload")

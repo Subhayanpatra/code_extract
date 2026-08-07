@@ -48,6 +48,18 @@
           </div>
         </fieldset>
       </form>
+      <section id="normalizationPanel" class="normalization-panel hidden" aria-labelledby="normalization-title">
+        <p class="step">ABBREVIATION FOUND</p>
+        <h3 id="normalization-title">Choose the intended full term</h3>
+        <p id="normalizationHelp" class="muted"></p>
+        <form id="normalizationForm">
+          <div id="normalizationOptions" class="normalization-options"></div>
+          <div class="normalization-actions">
+            <button class="primary-button" type="submit"><span>Use selected term</span><b>&rarr;</b></button>
+            <button id="cancelNormalization" class="text-button" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
       <p id="message" class="message" role="status"></p>
     </section>
 

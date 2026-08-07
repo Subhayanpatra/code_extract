@@ -2,6 +2,8 @@ const names = { diagnosis: 'Diagnosis codes', procedure: 'Procedure codes', ndc:
 const setupPanel = document.querySelector('#setupPanel');
 const message = document.querySelector('#message');
 const searchButton = document.querySelector('.primary-button');
+const normalizationPanel = document.querySelector('#normalizationPanel');
+let pendingSearch = null;
 
 document.querySelector('#setupToggle').addEventListener('click', () => setupPanel.classList.toggle('hidden'));
 document.querySelector('#closeSetup').addEventListener('click', () => setupPanel.classList.add('hidden'));
@@ -46,6 +48,44 @@ document.querySelector('#searchForm').addEventListener('submit', async event => 
   const keyword = document.querySelector('#keyword').value.trim();
   const datasets = [...document.querySelectorAll('input[name=dataset]:checked')].map(input => input.value);
   message.textContent = '';
+  normalizationPanel.classList.add('hidden');
+  try {
+    const response = await fetch(`/abbreviations/${encodeURIComponent(keyword)}`);
+    const normalization = await response.json();
+    if (normalization.matched) {
+      showNormalization(normalization, datasets);
+      return;
+    }
+  } catch (error) {
+    // Abbreviation lookup is optional; continue with the normal local search.
+  }
+  await runSearch(keyword, datasets);
+});
+
+function showNormalization(normalization, datasets) {
+  pendingSearch = { abbreviation: normalization.abbreviation, datasets };
+  document.querySelector('#normalizationHelp').textContent = `${normalization.abbreviation} has multiple possible meanings. Select the one you want to search for.`;
+  document.querySelector('#normalizationOptions').innerHTML = normalization.options.map((option, index) => `
+    <label><input type="radio" name="normalizedTerm" value="${escapeHtml(option)}" ${index === 0 ? 'checked' : ''}><span>${escapeHtml(option)}</span></label>
+  `).join('');
+  normalizationPanel.classList.remove('hidden');
+  normalizationPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.querySelector('#normalizationForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const selected = document.querySelector('input[name=normalizedTerm]:checked');
+  if (!selected || !pendingSearch) return;
+  normalizationPanel.classList.add('hidden');
+  await runSearch(selected.value, pendingSearch.datasets, pendingSearch.abbreviation);
+});
+
+document.querySelector('#cancelNormalization').addEventListener('click', () => {
+  normalizationPanel.classList.add('hidden');
+  pendingSearch = null;
+});
+
+async function runSearch(keyword, datasets, abbreviation = '') {
   searchButton.disabled = true;
   searchButton.querySelector('span').textContent = 'Searching…';
   try {
@@ -56,7 +96,7 @@ document.querySelector('#searchForm').addEventListener('submit', async event => 
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
-    renderResults(data);
+    renderResults(data, abbreviation);
     if (data.unavailable.length) {
       message.textContent = `Upload ${data.unavailable.map(item => names[item]).join(', ')} to include it in this search.`;
     }
@@ -66,15 +106,15 @@ document.querySelector('#searchForm').addEventListener('submit', async event => 
     searchButton.disabled = false;
     searchButton.querySelector('span').textContent = 'Search records';
   }
-});
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char]);
 }
 
-function renderResults(data) {
+function renderResults(data, abbreviation = '') {
   const section = document.querySelector('#resultsSection');
-  document.querySelector('#resultKeyword').textContent = `“${data.keyword}”`;
+  document.querySelector('#resultKeyword').textContent = abbreviation ? `${abbreviation} → ${data.keyword}` : `“${data.keyword}”`;
   document.querySelector('#summary').innerHTML = data.summary.map(item => `
     <div class="summary-card"><strong>${item.matches.toLocaleString()}</strong><span>${names[item.dataset]}</span></div>`).join('');
   document.querySelector('#resultTables').innerHTML = Object.entries(data.results).map(([kind, result]) => {

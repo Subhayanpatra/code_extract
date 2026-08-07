@@ -18,3 +18,7 @@ Expected files and required columns:
 - NDC: `PHARM_CLASSES`, `PROPRIETARYNAME`, `NONPROPRIETARYNAME`
 
 Uploaded files are stored in the local `data` directory. Searches use case-insensitive literal substring matching, matching the notebook workflow while safely handling special characters.
+
+## Abbreviation normalization
+
+Normalization is fully local and deterministic; it does not call AI or any external service. Exact inputs such as `MM`, `NSCLC`, `BC`, and `AML` show possible full terms for the user to select before searching. Edit `data/medical_abbreviations.json` to extend the catalog.
