@@ -49,16 +49,6 @@ document.querySelector('#searchForm').addEventListener('submit', async event => 
   const datasets = [...document.querySelectorAll('input[name=dataset]:checked')].map(input => input.value);
   message.textContent = '';
   normalizationPanel.classList.add('hidden');
-  try {
-    const response = await fetch(`/abbreviations/${encodeURIComponent(keyword)}`);
-    const normalization = await response.json();
-    if (normalization.matched) {
-      showNormalization(normalization, datasets);
-      return;
-    }
-  } catch (error) {
-    // Abbreviation lookup is optional; continue with the normal local search.
-  }
   await runSearch(keyword, datasets);
 });
 
@@ -114,7 +104,9 @@ function escapeHtml(value) {
 
 function renderResults(data, abbreviation = '') {
   const section = document.querySelector('#resultsSection');
-  document.querySelector('#resultKeyword').textContent = abbreviation ? `${abbreviation} → ${data.keyword}` : `“${data.keyword}”`;
+  document.querySelector('#resultKeyword').textContent = data.expanded
+    ? `${data.keyword} → ${data.search_terms.join('; ')}`
+    : `“${data.keyword}”`;
   document.querySelector('#summary').innerHTML = data.summary.map(item => `
     <div class="summary-card"><strong>${item.matches.toLocaleString()}</strong><span>${names[item.dataset]}</span></div>`).join('');
   document.querySelector('#resultTables').innerHTML = Object.entries(data.results).map(([kind, result]) => {

@@ -19,6 +19,6 @@ Expected files and required columns:
 
 Uploaded files are stored in the local `data` directory. Searches use case-insensitive literal substring matching, matching the notebook workflow while safely handling special characters.
 
-## Abbreviation normalization
+## Medical terminology expansion
 
-Normalization is fully local and deterministic; it does not call AI or any external service. Exact inputs such as `MM`, `NSCLC`, `BC`, and `AML` show possible full terms for the user to select before searching. Edit `data/medical_abbreviations.json` to extend the catalog.
+The app first checks for an exact, case-insensitive match in `Short_Term` and `Long_Term` in `data/medical_terms.csv`. A match searches every semicolon-separated synonym in `Search_Terms`; otherwise the original input is searched directly.
